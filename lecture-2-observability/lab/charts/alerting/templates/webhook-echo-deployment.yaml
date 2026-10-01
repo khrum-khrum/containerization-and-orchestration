@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-echo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-echo
+  template:
+    metadata:
+      labels:
+        app: webhook-echo
+    spec:
+      containers:
+        - name: webhook-echo
+          image: "{{ .Values.webhookEcho.image.repository }}:{{ .Values.webhookEcho.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.webhookEcho.port }}
+          env:
+            - name: HTTP_PORT
+              value: {{ .Values.webhookEcho.port | quote }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi

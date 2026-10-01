@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-echo
+  labels:
+    app: webhook-echo
+spec:
+  selector:
+    app: webhook-echo
+  ports:
+    - name: http
+      port: {{ .Values.webhookEcho.port }}
+      targetPort: http
+

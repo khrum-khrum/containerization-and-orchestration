@@ -1,0 +1,5 @@
+webhookEcho:
+  image:
+    repository: mendhak/http-https-echo
+    tag: "31"
+  port: 8080

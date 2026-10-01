@@ -1,0 +1,9 @@
+image:
+  repository: ghcr.io/prymitive/karma
+  tag: v0.133
+
+port: 8080
+
+alertmanager:
+  service: kube-prometheus-stack-alertmanager
+  port: 9093
