@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseline
+  namespace: lab-3
+  labels:
+    app.kubernetes.io/name: baseline
+    app.kubernetes.io/part-of: shop
+    owner: egor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: baseline
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: baseline
+        app.kubernetes.io/part-of: shop
+        owner: egor
+    spec:
+      containers:
+        - name: api
+          image: registry.local/shop/api:0.1.0
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              value: postgres://shop:shop@postgres:5432/shop?sslmode=disable
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10

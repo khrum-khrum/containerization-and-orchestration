@@ -1,0 +1,24 @@
+# Ломает require-explicit-image-tag, правило check-tag-not-latest.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-latest-tag
+  namespace: lab-3
+  labels:
+    app.kubernetes.io/name: bad-latest-tag
+    app.kubernetes.io/part-of: shop
+    owner: egor
+spec:
+  containers:
+    - name: api
+      image: registry.local/shop/api:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+      readinessProbe:
+        httpGet: { path: /health, port: 8080 }
+      livenessProbe:
+        httpGet: { path: /health, port: 8080 }

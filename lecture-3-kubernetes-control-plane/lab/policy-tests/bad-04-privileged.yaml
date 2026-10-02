@@ -1,0 +1,26 @@
+# Ломает disallow-privileged-containers.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-privileged
+  namespace: lab-3
+  labels:
+    app.kubernetes.io/name: bad-privileged
+    app.kubernetes.io/part-of: shop
+    owner: egor
+spec:
+  containers:
+    - name: api
+      image: registry.local/shop/api:0.1.0
+      securityContext:
+        privileged: true
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+      readinessProbe:
+        httpGet: { path: /health, port: 8080 }
+      livenessProbe:
+        httpGet: { path: /health, port: 8080 }

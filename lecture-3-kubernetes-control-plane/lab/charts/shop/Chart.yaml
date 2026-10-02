@@ -1,0 +1,9 @@
+apiVersion: v2
+name: shop
+description: >-
+  Магазин из лабораторной 3: api, worker и кластер postgres под управлением
+  оператора CloudNativePG. Чарт написан так, чтобы проходить все шесть
+  ClusterPolicy из каталога policies/ без единого исключения.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

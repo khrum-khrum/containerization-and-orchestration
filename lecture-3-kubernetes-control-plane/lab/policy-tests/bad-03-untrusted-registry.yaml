@@ -1,0 +1,24 @@
+# Ломает restrict-image-registries: образ из публичного Docker Hub.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-untrusted-registry
+  namespace: lab-3
+  labels:
+    app.kubernetes.io/name: bad-untrusted-registry
+    app.kubernetes.io/part-of: shop
+    owner: egor
+spec:
+  containers:
+    - name: nginx
+      image: docker.io/library/nginx:1.29.3
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+      readinessProbe:
+        httpGet: { path: /, port: 80 }
+      livenessProbe:
+        httpGet: { path: /, port: 80 }
