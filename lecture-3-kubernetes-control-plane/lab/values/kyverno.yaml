@@ -1,0 +1,18 @@
+admissionController:
+  replicas: 1
+backgroundController:
+  replicas: 1
+cleanupController:
+  replicas: 1
+reportsController:
+  replicas: 1
+
+features:
+  policyExceptions:
+    enabled: true
+    namespace: kyverno
+
+config:
+  resourceFiltersIncludeNamespaces:
+    - cnpg-system
+    - lab-2

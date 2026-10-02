@@ -1,0 +1,20 @@
+# Ломает require-workload-labels: нет ни одной обязательной метки.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-no-labels
+  namespace: lab-3
+spec:
+  containers:
+    - name: api
+      image: registry.local/shop/api:0.1.0
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+      readinessProbe:
+        httpGet: { path: /health, port: 8080 }
+      livenessProbe:
+        httpGet: { path: /health, port: 8080 }

@@ -1,0 +1,74 @@
+commonLabels:
+  app.kubernetes.io/part-of: shop
+  owner: egor
+
+image:
+  registry: registry.local/shop
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+api:
+  replicaCount: 3
+  containerPort: 8080
+  service:
+    port: 80
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 5
+  healthFail: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+worker:
+  replicaCount: 2
+  containerPort: 8080
+  service:
+    port: 80
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 5
+  healthFail: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+postgres:
+  enabled: true
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-system-trixie
+  database: shop
+  username: shop
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  secretName: ""
+  secretKey: uri
+  podMonitor: false
+
+monitoring:
+  enabled: false
+  serviceMonitor:
+    interval: 15s
+    scrapeTimeout: 10s
+  dashboard:
+    enabled: true
+    sidecarLabel: grafana_dashboard
+  prometheusRule:
+    enabled: true
+    additionalLabels: {}

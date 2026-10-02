@@ -1,0 +1,18 @@
+# Ломает require-resource-requests-limits: блока resources нет вовсе.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-no-resources
+  namespace: lab-3
+  labels:
+    app.kubernetes.io/name: bad-no-resources
+    app.kubernetes.io/part-of: shop
+    owner: egor
+spec:
+  containers:
+    - name: api
+      image: registry.local/shop/api:0.1.0
+      readinessProbe:
+        httpGet: { path: /health, port: 8080 }
+      livenessProbe:
+        httpGet: { path: /health, port: 8080 }

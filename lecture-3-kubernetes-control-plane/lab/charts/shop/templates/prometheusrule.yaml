@@ -1,0 +1,65 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: shop
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if .Values.monitoring.prometheusRule.additionalLabels }}
+    {{- toYaml .Values.monitoring.prometheusRule.additionalLabels | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: shop.rules
+      rules:
+        - alert: ShopApiDown
+          expr: up{job="{{ .Release.Name }}-api", namespace="{{ .Release.Namespace }}"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: shop
+          annotations:
+            summary: "Цель {{ "{{ $labels.pod }}" }} не отвечает на scrape"
+            description: >-
+              Prometheus не может снять метрики с {{ "{{ $labels.pod }}" }}
+              в неймспейсе {{ "{{ $labels.namespace }}" }} дольше двух
+              минут. Проверить: kubectl -n {{ .Release.Namespace }} describe pod
+              {{ "{{ $labels.pod }}" }}
+
+        - alert: ShopRolloutStuck
+          expr: kube_deployment_status_replicas_unavailable{namespace="{{ .Release.Namespace }}", deployment=~"{{ .Release.Name }}-(api|worker)"} > 0
+          for: 5m
+          labels:
+            severity: warning
+            service: shop
+          annotations:
+            summary: "Выкатка {{ "{{ $labels.deployment }}" }} застряла"
+            description: >-
+              У {{ "{{ $labels.deployment }}" }} уже пять минут
+              {{ "{{ $value }}" }} недоступных реплик. Смотреть:
+              kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ "{{ $labels.deployment }}" }}
+              и далее helm rollback, если причина в релизе.
+
+        - alert: ShopOrdersNotProcessed
+          expr: |-
+            sum(rate(shop_orders_created_total{namespace="{{ .Release.Namespace }}", job="{{ .Release.Name }}-api"}[10m])) > 0
+              and
+            (sum(rate(shop_orders_processed_total{namespace="{{ .Release.Namespace }}", job="{{ .Release.Name }}-worker"}[10m])) or vector(0)) == 0
+          for: 10m
+          labels:
+            severity: critical
+            service: shop
+          annotations:
+            summary: "Заказы копятся: воркер ничего не обрабатывает"
+            description: >-
+              За последние 10 минут api принял заказы, а
+              shop_orders_processed_total не вырос ни на единицу. Проверить
+              логи воркера и доступность базы: kubectl -n {{ .Release.Namespace }} logs
+              -l app.kubernetes.io/component=worker --tail=50
+{{- end }}

@@ -1,0 +1,18 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.dashboard.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-dashboard
+  labels:
+    app.kubernetes.io/name: shop
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{ .Values.monitoring.dashboard.sidecarLabel }}: "1"
+data:
+  shop.json: |-
+    {{- .Files.Get "dashboards/shop.json" | nindent 4 }}
+{{- end }}
