@@ -1,0 +1,35 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-requests-limits
+  annotations:
+    policies.kyverno.io/title: Обязательные requests и limits
+    policies.kyverno.io/category: Resources
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Без requests scheduler считает под бесплатным и набивает узел до отказа.
+      Без limits по памяти одна утечка выносит соседей по узлу: память,
+      в отличие от CPU, несжимаема, и OOM killer выбирает жертву сам.
+spec:
+  background: true
+  rules:
+    - name: check-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        failureAction: Enforce
+        message: >-
+          Каждый контейнер обязан объявить requests.cpu, requests.memory и limits.memory.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    memory: "?*"
