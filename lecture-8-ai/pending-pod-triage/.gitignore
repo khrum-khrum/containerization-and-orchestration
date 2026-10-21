@@ -1,0 +1,4 @@
+mcp/kubeconfig
+output/*
+!output/.gitkeep
+.claude/

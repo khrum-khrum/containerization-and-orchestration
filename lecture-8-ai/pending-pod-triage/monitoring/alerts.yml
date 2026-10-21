@@ -1,0 +1,28 @@
+groups:
+  - name: pending-pod-triage
+    rules:
+      - alert: TriageWorkflowFailed
+        expr: increase(n8n_workflow_execution_duration_seconds_count{status!="success"}[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Разбор Pending-пода завершился с ошибкой"
+          description: "За 15 минут хотя бы один запуск workflow закончился не success. Разработчик не получил отчёт."
+
+      - alert: TriageDependencyDown
+        expr: up{job="mcp-kubernetes"} == 0 or probe_success{job="deps"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Недоступна зависимость агента: {{ $labels.job }} {{ $labels.dep }}"
+          description: "Без kubernetes MCP, filesystem MCP или Ollama агент не может собрать доказательства, следующий алерт о Pending останется без разбора."
+
+      - alert: TriageTooSlow
+        expr: histogram_quantile(0.95, sum by (le) (rate(n8n_workflow_execution_duration_seconds_bucket{status="success"}[30m]))) > 180
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 разбора дольше трёх минут"
+          description: "Успешные запуски стабильно медленнее ожидаемого. Обычно это модель: не хватает памяти, контекст переполнен или агент крутится в лишних итерациях."
