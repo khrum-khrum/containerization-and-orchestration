@@ -1,0 +1,79 @@
+name: lab8
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      N8N_SECURE_COOKIE: "false"
+      N8N_RUNNERS_ENABLED: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      GENERIC_TIMEZONE: Europe/Moscow
+      N8N_RESTRICT_FILE_ACCESS_TO: /files
+      N8N_METRICS: "true"
+      N8N_METRICS_INCLUDE_WORKFLOW_ID_LABEL: "true"
+      N8N_METRICS_INCLUDE_NODE_TYPE_LABEL: "true"
+      N8N_METRICS_INCLUDE_MESSAGE_EVENT_BUS_METRICS: "true"
+      N8N_METRICS_INCLUDE_API_ENDPOINTS: "true"
+      N8N_METRICS_INCLUDE_API_STATUS_CODE_LABEL: "true"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./output:/files
+      - ./skills:/skills:ro
+    depends_on:
+      mcp-kubernetes:
+        condition: service_started
+      mcp-filesystem:
+        condition: service_healthy
+
+  mcp-kubernetes:
+    image: quay.io/containers/kubernetes_mcp_server:latest
+    command: ["--config", "/config/kubernetes.toml"]
+    volumes:
+      - ./mcp/kubernetes.toml:/config/kubernetes.toml:ro
+      - ./mcp/kubeconfig:/config/kubeconfig:ro
+    networks:
+      - default
+      - kind
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  mcp-filesystem:
+    image: supercorp/supergateway:latest
+    command:
+      - --stdio
+      - npx -y @modelcontextprotocol/server-filesystem /knowledge
+      - --outputTransport
+      - streamableHttp
+      - --port
+      - "8000"
+      - --healthEndpoint
+      - /healthz
+      - --logLevel
+      - info
+    volumes:
+      - ./knowledge:/knowledge:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  default: {}
+  kind:
+    external: true
+
+volumes:
+  n8n_data: {}

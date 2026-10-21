@@ -1,0 +1,12 @@
+port = "8080"
+metrics_port = "9090"
+kubeconfig = "/config/kubeconfig"
+read_only = true
+toolsets = ["core"]
+list_output = "yaml"
+log_level = 2
+
+[[denied_resources]]
+group = ""
+version = "v1"
+kind = "Secret"

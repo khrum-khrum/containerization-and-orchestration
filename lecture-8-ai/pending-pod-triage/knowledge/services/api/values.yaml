@@ -1,0 +1,16 @@
+service: api
+team: checkout
+owner: checkout@shop
+replicas: 2
+priorityClassName: shop-critical
+placement:
+  antiAffinity: preferred
+  topologyKey: kubernetes.io/hostname
+  nodeSelector: {}
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
